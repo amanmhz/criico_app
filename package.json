@@ -12,6 +12,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.1",
     "bcryptjs": "^3.0.3",
     "jose": "^6.2.14",
@@ -27,7 +28,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
-    "prisma": "^8.0.0-rc.29",
+    "prisma": "^7.10.1",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^3.2.4"

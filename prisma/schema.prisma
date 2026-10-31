@@ -1,0 +1,108 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  ADMIN
+  VIEWER
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(VIEWER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum PlayerRole {
+  BATSMAN
+  BOWLER
+  ALL_ROUNDER
+  WICKETKEEPER
+}
+
+model Player {
+  id            String     @id @default(cuid())
+  name          String
+  role          PlayerRole
+  basePrice     Float
+  matchesPlayed Int        @default(0)
+  totalRuns     Int        @default(0)
+  totalWickets  Int        @default(0)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  teams        TeamPlayer[]
+  performances PlayerPerformance[]
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  shortName   String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  players      TeamPlayer[]
+  teamAMatches Match[]             @relation("TeamA")
+  teamBMatches Match[]             @relation("TeamB")
+  performances PlayerPerformance[]
+}
+
+model TeamPlayer {
+  id        String   @id @default(cuid())
+  teamId    String
+  playerId  String
+  joinedAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  team   Team   @relation(fields: [teamId], references: [id])
+  player Player @relation(fields: [playerId], references: [id])
+
+  @@unique([teamId, playerId])
+}
+
+model Match {
+  id        String   @id @default(cuid())
+  teamAId   String
+  teamBId   String
+  result    String?
+  playedAt  DateTime
+  createdAt DateTime @default(now())
+
+  teamA Team @relation("TeamA", fields: [teamAId], references: [id])
+  teamB Team @relation("TeamB", fields: [teamBId], references: [id])
+
+  performances PlayerPerformance[]
+
+  @@index([teamAId])
+  @@index([teamBId])
+}
+
+model PlayerPerformance {
+  id        String   @id @default(cuid())
+  matchId   String
+  playerId  String
+  teamId    String
+  runs      Int      @default(0)
+  wickets   Int      @default(0)
+  createdAt DateTime @default(now())
+
+  match  Match  @relation(fields: [matchId], references: [id])
+  player Player @relation(fields: [playerId], references: [id])
+  team   Team   @relation(fields: [teamId], references: [id])
+
+  @@unique([matchId, playerId])
+  @@index([teamId])
+}
