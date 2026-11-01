@@ -16,6 +16,8 @@ export function DashboardNav({ user }: DashboardNavProps) {
     { label: 'Overview', href: '/dashboard' },
     { label: 'Players', href: '/dashboard/players' },
     { label: 'Teams', href: '/dashboard/teams' },
+    { label: 'Matches', href: '/dashboard/matches' },
+    { label: 'Leaderboard', href: '/dashboard/leaderboard' },
   ];
 
   const isActive = (href: string) => {

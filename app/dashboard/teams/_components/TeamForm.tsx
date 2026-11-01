@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { teamsApi } from '@/lib/api/teams';
 import { ApiError } from '@/lib/api/client';
+import { useToast } from '@/app/_components/ToastProvider';
 import type { Team } from '@/types/team';
 
 interface TeamFormProps {
@@ -14,6 +15,7 @@ interface TeamFormProps {
 
 export function TeamForm({ initialData, mode }: TeamFormProps) {
   const router = useRouter();
+  const { toast } = useToast();
 
   const [name, setName] = useState(initialData?.name || '');
   const [shortName, setShortName] = useState(initialData?.shortName || '');
@@ -27,12 +29,16 @@ export function TeamForm({ initialData, mode }: TeamFormProps) {
     setError(null);
 
     if (!name.trim()) {
-      setError('Team name is required');
+      const msg = 'Team name is required';
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
     if (!shortName.trim()) {
-      setError('Short name is required');
+      const msg = 'Short name is required';
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
@@ -47,18 +53,22 @@ export function TeamForm({ initialData, mode }: TeamFormProps) {
 
       if (mode === 'create') {
         await teamsApi.create(payload);
+        toast.success(`Team "${name.trim()}" created successfully!`);
       } else if (initialData) {
         await teamsApi.update(initialData.id, payload);
+        toast.success(`Team "${name.trim()}" updated successfully!`);
       }
 
       router.push('/dashboard/teams');
       router.refresh();
     } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message);
-      } else {
-        setError('An unexpected error occurred while saving team.');
-      }
+      const msg =
+        err instanceof ApiError
+          ? err.message
+          : 'An unexpected error occurred while saving team.';
+      setError(msg);
+      toast.error(msg);
+    } finally {
       setLoading(false);
     }
   };
@@ -148,4 +158,3 @@ export function TeamForm({ initialData, mode }: TeamFormProps) {
     </form>
   );
 }
-

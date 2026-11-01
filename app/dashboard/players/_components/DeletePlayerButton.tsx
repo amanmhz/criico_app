@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { playersApi } from '@/lib/api/players';
 import { ApiError } from '@/lib/api/client';
+import { useToast } from '@/app/_components/ToastProvider';
 
 interface DeletePlayerButtonProps {
   playerId: string;
@@ -12,6 +13,7 @@ interface DeletePlayerButtonProps {
 
 export function DeletePlayerButton({ playerId, playerName }: DeletePlayerButtonProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,14 +24,16 @@ export function DeletePlayerButton({ playerId, playerName }: DeletePlayerButtonP
 
     try {
       await playersApi.delete(playerId);
+      toast.success(`Player "${playerName}" deleted successfully.`);
       setConfirmOpen(false);
       router.refresh();
     } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message);
-      } else {
-        setError('Failed to delete player. Please try again.');
-      }
+      const msg =
+        err instanceof ApiError
+          ? err.message
+          : 'Failed to delete player. Please try again.';
+      setError(msg);
+      toast.error(msg);
       setLoading(false);
     }
   };

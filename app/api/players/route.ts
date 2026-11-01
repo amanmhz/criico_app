@@ -13,7 +13,10 @@ export async function GET(request: NextRequest) {
 
     const players = await playerService.listPlayers({ name, role });
     return NextResponse.json({ players }, { status: 200 });
-  } catch (error) {
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'digest' in error) {
+      throw error;
+    }
     if (error instanceof AuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
@@ -39,7 +42,10 @@ export async function POST(request: NextRequest) {
       { message: 'Player created successfully', player },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'digest' in error) {
+      throw error;
+    }
     if (error instanceof AuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }

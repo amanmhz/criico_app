@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { playersApi } from '@/lib/api/players';
 import { ApiError } from '@/lib/api/client';
+import { useToast } from '@/app/_components/ToastProvider';
 import type { Player, PlayerRole } from '@/types/player';
 
 interface PlayerFormProps {
@@ -14,6 +15,7 @@ interface PlayerFormProps {
 
 export function PlayerForm({ initialData, mode }: PlayerFormProps) {
   const router = useRouter();
+  const { toast } = useToast();
 
   const [name, setName] = useState(initialData?.name || '');
   const [role, setRole] = useState<PlayerRole>(initialData?.role || 'BATSMAN');
@@ -35,27 +37,37 @@ export function PlayerForm({ initialData, mode }: PlayerFormProps) {
     const wicketsNum = parseInt(totalWickets, 10);
 
     if (!name.trim()) {
-      setError('Player name is required');
+      const msg = 'Player name is required';
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
     if (isNaN(priceNum) || priceNum < 0) {
-      setError('Base price must be a non-negative number');
+      const msg = 'Base price must be a non-negative number';
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
     if (isNaN(matchesNum) || matchesNum < 0) {
-      setError('Matches played must be a non-negative integer');
+      const msg = 'Matches played must be a non-negative integer';
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
     if (isNaN(runsNum) || runsNum < 0) {
-      setError('Total runs must be a non-negative integer');
+      const msg = 'Total runs must be a non-negative integer';
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
     if (isNaN(wicketsNum) || wicketsNum < 0) {
-      setError('Total wickets must be a non-negative integer');
+      const msg = 'Total wickets must be a non-negative integer';
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
@@ -73,18 +85,22 @@ export function PlayerForm({ initialData, mode }: PlayerFormProps) {
 
       if (mode === 'create') {
         await playersApi.create(payload);
+        toast.success(`Player "${name.trim()}" created successfully!`);
       } else if (initialData) {
         await playersApi.update(initialData.id, payload);
+        toast.success(`Player "${name.trim()}" updated successfully!`);
       }
 
       router.push('/dashboard/players');
       router.refresh();
     } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message);
-      } else {
-        setError('An unexpected error occurred while saving player.');
-      }
+      const msg =
+        err instanceof ApiError
+          ? err.message
+          : 'An unexpected error occurred while saving player.';
+      setError(msg);
+      toast.error(msg);
+    } finally {
       setLoading(false);
     }
   };
@@ -188,7 +204,6 @@ export function PlayerForm({ initialData, mode }: PlayerFormProps) {
           <input
             id="totalRuns"
             type="number"
-            min="0"
             step="1"
             value={totalRuns}
             onChange={(e) => setTotalRuns(e.target.value)}
@@ -234,4 +249,3 @@ export function PlayerForm({ initialData, mode }: PlayerFormProps) {
     </form>
   );
 }
-

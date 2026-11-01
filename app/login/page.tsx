@@ -4,9 +4,11 @@ import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { authApi } from '@/lib/api/auth';
 import { ApiError } from '@/lib/api/client';
+import { useToast } from '@/app/_components/ToastProvider';
 
 function LoginForm() {
   const router = useRouter();
+  const { toast } = useToast();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
 
@@ -27,17 +29,22 @@ function LoginForm() {
     setLoading(true);
 
     try {
-      await authApi.login({ email: email.trim(), password });
+      const res = await authApi.login({ email: email.trim(), password });
+      toast.success(`Welcome back, ${res.user.name}!`);
       // Successful login — navigate to the intended destination
       router.push(callbackUrl);
       router.refresh();
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
+        toast.error(err.message);
       } else {
         console.error('Login error:', err);
-        setError('Network error. Please try again later.');
+        const msg = 'Network error. Please try again later.';
+        setError(msg);
+        toast.error(msg);
       }
+    } finally {
       setLoading(false);
     }
   };

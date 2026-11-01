@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { teamsApi } from '@/lib/api/teams';
 import { ApiError } from '@/lib/api/client';
+import { useToast } from '@/app/_components/ToastProvider';
 
 interface DeleteTeamButtonProps {
   teamId: string;
@@ -12,6 +13,7 @@ interface DeleteTeamButtonProps {
 
 export function DeleteTeamButton({ teamId, teamName }: DeleteTeamButtonProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,14 +24,16 @@ export function DeleteTeamButton({ teamId, teamName }: DeleteTeamButtonProps) {
 
     try {
       await teamsApi.delete(teamId);
+      toast.success(`Team "${teamName}" deleted successfully.`);
       setConfirmOpen(false);
       router.refresh();
     } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message);
-      } else {
-        setError('Failed to delete team. Please try again.');
-      }
+      const msg =
+        err instanceof ApiError
+          ? err.message
+          : 'Failed to delete team. Please try again.';
+      setError(msg);
+      toast.error(msg);
       setLoading(false);
     }
   };

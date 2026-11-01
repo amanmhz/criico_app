@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { teamPlayersApi } from '@/lib/api/teamPlayers';
 import { ApiError } from '@/lib/api/client';
+import { useToast } from '@/app/_components/ToastProvider';
 
 interface RemovePlayerButtonProps {
   teamId: string;
@@ -17,6 +18,7 @@ export function RemovePlayerButton({
   playerName,
 }: RemovePlayerButtonProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,14 +29,16 @@ export function RemovePlayerButton({
 
     try {
       await teamPlayersApi.remove(teamId, playerId);
+      toast.success(`Removed "${playerName}" from the squad.`);
       setConfirmOpen(false);
       router.refresh();
     } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message);
-      } else {
-        setError('Failed to remove player from team.');
-      }
+      const msg =
+        err instanceof ApiError
+          ? err.message
+          : 'Failed to remove player from team.';
+      setError(msg);
+      toast.error(msg);
       setLoading(false);
     }
   };

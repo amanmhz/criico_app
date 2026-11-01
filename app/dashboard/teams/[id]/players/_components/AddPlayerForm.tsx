@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { teamPlayersApi } from '@/lib/api/teamPlayers';
 import { ApiError } from '@/lib/api/client';
+import { useToast } from '@/app/_components/ToastProvider';
 import type { Player } from '@/types/player';
 
 interface AddPlayerFormProps {
@@ -13,6 +14,7 @@ interface AddPlayerFormProps {
 
 export function AddPlayerForm({ teamId, availablePlayers }: AddPlayerFormProps) {
   const router = useRouter();
+  const { toast } = useToast();
 
   const [selectedPlayerId, setSelectedPlayerId] = useState('');
   const [searchFilter, setSearchFilter] = useState('');
@@ -30,7 +32,9 @@ export function AddPlayerForm({ teamId, availablePlayers }: AddPlayerFormProps) 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPlayerId) {
-      setError('Please choose a player to add.');
+      const msg = 'Please choose a player to add.';
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
@@ -40,16 +44,17 @@ export function AddPlayerForm({ teamId, availablePlayers }: AddPlayerFormProps) 
 
     try {
       await teamPlayersApi.add(teamId, selectedPlayerId);
-      setSuccess(`Player "${selectedPlayer?.name}" added to squad successfully!`);
+      const msg = `Player "${selectedPlayer?.name}" added to squad successfully!`;
+      setSuccess(msg);
+      toast.success(msg);
       setSelectedPlayerId('');
       setSearchFilter('');
       router.refresh();
     } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message);
-      } else {
-        setError('Failed to add player to team.');
-      }
+      const msg =
+        err instanceof ApiError ? err.message : 'Failed to add player to team.';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

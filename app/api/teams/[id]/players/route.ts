@@ -28,7 +28,10 @@ export async function GET(
 
     const players = await teamPlayerService.listTeamPlayers(id);
     return NextResponse.json({ players }, { status: 200 });
-  } catch (error) {
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'digest' in error) {
+      throw error;
+    }
     if (error instanceof AuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
@@ -58,7 +61,10 @@ export async function POST(
       { message: 'Player added to team successfully', assignment },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'digest' in error) {
+      throw error;
+    }
     if (error instanceof AuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
