@@ -2,6 +2,8 @@
 
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { authApi } from '@/lib/api/auth';
+import { ApiError } from '@/lib/api/client';
 
 function LoginForm() {
   const router = useRouter();
@@ -25,28 +27,17 @@ function LoginForm() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: email.trim(), password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || 'Failed to login. Please check your credentials.');
-        setLoading(false);
-        return;
-      }
-
-      // Successful login
+      await authApi.login({ email: email.trim(), password });
+      // Successful login — navigate to the intended destination
       router.push(callbackUrl);
       router.refresh();
     } catch (err) {
-      console.error('Login error:', err);
-      setError('Network error. Please try again later.');
+      if (err instanceof ApiError) {
+        setError(err.message);
+      } else {
+        console.error('Login error:', err);
+        setError('Network error. Please try again later.');
+      }
       setLoading(false);
     }
   };

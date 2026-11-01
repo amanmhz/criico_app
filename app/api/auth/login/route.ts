@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { loginSchema } from '@/lib/validation/auth';
-import { verifyPassword, signToken, AUTH_COOKIE_NAME, COOKIE_OPTIONS } from '@/lib/auth';
-import type { AuthUser } from '@/types/auth';
+import { authService, AuthenticationError } from '@/lib/services/auth.service';
+import { AUTH_COOKIE_NAME, COOKIE_OPTIONS } from '@/lib/auth';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    // Validate login input with Zod
+    // 1. Validate incoming request body
     const validationResult = loginSchema.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
@@ -20,45 +19,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const { email, password } = validationResult.data;
+    // 2. Delegate authentication business logic to the service layer
+    const { user, token } = await authService.login(validationResult.data);
 
-    // Find user by email
-    const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() },
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      );
-    }
-
-    // Verify password with bcryptjs
-    const isPasswordValid = await verifyPassword(password, user.password);
-    if (!isPasswordValid) {
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      );
-    }
-
-    // Create user payload including user's role
-    const authUser: AuthUser = {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    };
-
-    // Generate JWT with jose
-    const token = await signToken(authUser);
-
-    // Return response and set HTTP-only cookie
+    // 3. Construct HTTP response and set secure session cookie
     const response = NextResponse.json(
       {
         message: 'Login successful',
-        user: authUser,
+        user,
       },
       { status: 200 }
     );
@@ -67,11 +35,17 @@ export async function POST(request: Request) {
 
     return response;
   } catch (error) {
-    console.error('Error during login:', error);
+    if (error instanceof AuthenticationError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status }
+      );
+    }
+
+    console.error('Unexpected error during login:', error);
     return NextResponse.json(
       { error: 'Internal server error during login' },
       { status: 500 }
     );
   }
 }
-
