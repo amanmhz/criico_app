@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
+import { SignOutButton } from '@/app/dashboard/_components/SignOutButton';
 
 export const instant = false;
 
@@ -38,14 +39,7 @@ export default async function DashboardPage() {
               Role: {user.role}
             </span>
 
-            <form action="/api/auth/logout" method="POST">
-              <button
-                type="submit"
-                className="px-3.5 py-1.5 rounded-lg text-sm font-medium text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition"
-              >
-                Sign out
-              </button>
-            </form>
+            <SignOutButton />
           </div>
         </div>
 

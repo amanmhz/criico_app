@@ -27,6 +27,13 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  // Root route: redirect based on auth state
+  if (pathname === '/') {
+    return NextResponse.redirect(
+      new URL(user ? '/dashboard' : '/login', request.url)
+    );
+  }
+
   return NextResponse.next();
 }
 
@@ -34,6 +41,6 @@ export const middleware = proxy;
 export default proxy;
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/login'],
+  matcher: ['/dashboard/:path*', '/login', '/'],
 };
 
